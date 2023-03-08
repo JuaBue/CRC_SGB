@@ -6,32 +6,34 @@
 
 using namespace std;
 
-#define Polynomial      0x07
-#define InitValue       0x00
+#define Polynomial      0xF4
+#define InitValue       0xFF
 #define FinalXOR        0x00
 #define PolySize        0x80
 
 void compute_table( uint8_t table[256], uint8_t polynomial ) 
 {
-    uint8_t crc = PolySize;
-    size_t i, j;
+    uint8_t remainder = 0;
+    size_t dividend, bit;
     memset(table, 0, 256);
 
-    for (i = 1; i < 256; i <<= 1) 
+    for (dividend = 0; dividend < 256; ++dividend) 
     {
-        if ( crc & 0x80 )
+        remainder = dividend;
+
+        for ( bit = 8; bit > 0; --bit )
         {
-            crc = (crc << 1) ^ polynomial;
-        }
-        else
-        {
-            crc <<= 1;
+            if ( remainder & 1 )
+            {
+                remainder = ( remainder >> 1 ) ^ Polynomial;
+            }
+            else
+            {
+                remainder = (remainder >> 1);
+            }
         }
 
-        for ( j = 0; j < i; j++ )
-        {
-            table[i + j] = crc ^ table[j];
-        }
+        table[dividend] = remainder;
     }
 }
 
@@ -72,7 +74,7 @@ uint8_t calculate_crc ( uint8_t cur_crc, size_t length, uint8_t* buffer, uint8_t
 int main(void) {
     uint8_t table[256]      = { 0 };
     uint8_t valor_salida    = 0;
-    uint8_t calculo[16]      = { 0x00, 0x2C, 0xB1, 0x84, 0x3E, 0xC8, 0x00, 0x00, 0x01, 0x2C, 0xB1, 0x84, 0x3E, 0xC8, 0x00, 0x00 };
+    uint8_t calculo[2]      = { 0x64, 0x64 };
 
     compute_table( table, Polynomial );
 
